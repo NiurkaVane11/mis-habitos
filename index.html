@@ -23,6 +23,9 @@
     --muted: #8a6d79;
     --line: #f3d9e3;
     --radius: 18px;
+    --px-dark: #6e1647;
+    --px-light: #ffacd5;
+    --px-hot: #ff69b4;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
@@ -45,7 +48,11 @@
   .list { padding: 0 16px; display: grid; gap: 10px; }
   .habit { background: var(--card); border-radius: var(--radius); padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 14px;
     box-shadow: 0 1px 3px rgba(225, 29, 116, .08); }
-  .habit .emoji { font-size: 30px; width: 40px; text-align: center; }
+  .px { display: inline-block; width: 40px; height: 40px; padding: 3px; background: var(--px-light); border: 2px solid var(--px-dark);
+    box-shadow: 2px 2px 0 var(--px-dark); flex-shrink: 0; }
+  .px svg { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .px.sm { width: 24px; height: 24px; padding: 1px; box-shadow: 1px 1px 0 var(--px-dark); border-width: 1.5px; }
+  .habit.done .px { background: var(--px-hot); }
   .habit .info { flex: 1; min-width: 0; }
   .habit .name { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .habit .meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
@@ -78,8 +85,11 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
   .icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-  .icons button { aspect-ratio: 1; border-radius: 14px; background: var(--card); font-size: 24px; border: 2px solid transparent; }
+  .icons button { aspect-ratio: 1; border-radius: 14px; background: var(--card); border: 2px solid transparent; display: grid; place-items: center; }
   .icons button.sel { border-color: var(--rose); background: var(--rose-soft); }
+  .icons .px { width: 36px; height: 36px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; }
+  h2 .px { width: 34px; height: 34px; vertical-align: middle; margin-right: 8px; }
   .field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-size: 16px; outline: none; }
   .field:focus { border-color: var(--rose-mid); }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px 16px; }
@@ -185,14 +195,51 @@
 
 <script>
 // ================== Datos ==================
-const ICONOS = ['✅','💧','🏃','📚','🎧','🧘','🥗','😴','💊','🎯','✍️','🇬🇧','💻','🧹','🙏','🎸','🚶‍♀️','💰'];
+// Íconos pixel art 8x8 (los mismos del Habit Tracker original)
+// o = borde oscuro | p = rosa | l = rosa claro | r = rosa fuerte | w = blanco | . = vacío
+const PALETTE = { o: '#6e1647', p: '#ff69b4', l: '#ffacd5', r: '#c33b80', w: '#ffffff' };
+const PIXEL = {
+  water:   ['...oo...','...oo...','..olpo..','..olpo..','.olppro.','.opppro.','.opppro.','..oooo..'],
+  bible:   ['oooooooo','opppppro','opppwppo','opwwwwpo','opppwppo','opppwppo','opppppro','oooooooo'],
+  book:    ['.oooooo.','ollllllo','olwwwwlo','ollllllo','olwwwwlo','ollllllo','opppppro','.oooooo.'],
+  heart:   ['.oo..oo.','olpoopro','opppppro','opppppro','.opppro.','..oppo..','...oo...','........'],
+  owl:     ['oo....oo','oppppppo','owwppwwo','owoppowo','oppllppo','oppppppo','.oppppo.','..oooo..'],
+  planner: ['.o....o.','oooooooo','oppppppo','owwwwwwo','owpwppwo','owwwwwwo','owpwppwo','oooooooo'],
+  star:    ['...oo...','...oo...','oooppooo','opppppro','.oppppo.','.oppppo.','.opo.opo','.oo...oo'],
+  study:   ['...oo...','..olpo..','.olpppo.','oppppppo','.oooooo.','.opoopo.','.opppro.','..oooo..'],
+  podcast: ['..oooo..','.o....o.','o......o','o......o','oo....oo','opo..opo','opo..opo','oo....oo'],
+  shoe:    ['........','..ooo...','..opo...','..oppo..','.oppppo.','oppppppo','oooooooo','........'],
+  check:   ['........','.......w','......ww','w....ww.','ww..ww..','.wwww...','..ww....','........'],
+};
+const ICONOS = ['water', 'bible', 'book', 'heart', 'owl', 'planner', 'star', 'study', 'podcast', 'shoe'];
+
+function svgPixel(name) {
+  const rows = PIXEL[name] || PIXEL.star;
+  let rects = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => {
+    if (PALETTE[c]) rects += `<rect x="${x}" y="${y}" width="1" height="1" fill="${PALETTE[c]}"/>`;
+  }));
+  return `<svg viewBox="0 0 8 8" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">${rects}</svg>`;
+}
+const px = (name, cls = '') => `<span class="px ${cls}">${svgPixel(name)}</span>`;
+
+// Tus hábitos de siempre + Listening podcast
+const HABITOS_BASE = [
+  ['Tomar agua', 'Salud', 'water'],
+  ['Leer Biblia', 'Espíritu', 'bible'],
+  ['Leer libro', 'Mente', 'book'],
+  ['Comer 3 veces', 'Nutrición', 'heart'],
+  ['Hacer Duolingo', 'Aprendizaje', 'owl'],
+  ['Planificar día', 'Organización', 'planner'],
+  ['No comer azúcar', 'Bienestar', 'star'],
+  ['Study +10 hours', 'Estudio', 'study'],
+  ['Listening podcast', 'Inglés', 'podcast'],
+];
 const SUGERENCIAS = [
-  ['Listening podcast', '🎧'],
-  ['Tomar agua', '💧'],
-  ['Leer', '📚'],
-  ['Hacer ejercicio', '🏃'],
-  ['Meditar', '🧘'],
-  ['Practicar inglés', '🇬🇧'],
+  ['Caminar 20 min', 'shoe'],
+  ['Listening podcast', 'podcast'],
+  ['Tomar agua', 'water'],
+  ['Leer libro', 'book'],
 ];
 
 const KEY = 'habitos.v1';
@@ -201,6 +248,24 @@ let uid = localStorage.getItem('habitos.uid');
 if (!uid) {
   uid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
   localStorage.setItem('habitos.uid', uid);
+}
+
+// Agrega tus hábitos de siempre (solo una vez) y pasa íconos viejos a pixel art
+function migrar() {
+  if (!localStorage.getItem('habitos.base.v1')) {
+    for (const [name, category, icon] of HABITOS_BASE) {
+      if (!state.habits.some((h) => h.name.toLowerCase() === name.toLowerCase())) {
+        state.habits.push({ id: nuevoId(), name, category, icon, reminder: null, created: ymd() });
+      }
+    }
+    localStorage.setItem('habitos.base.v1', '1');
+  }
+  const viejos = { '🎧': 'podcast', '💧': 'water', '📚': 'book', '🏃': 'shoe', '🚶‍♀️': 'shoe' };
+  for (const h of state.habits) if (!PIXEL[h.icon]) h.icon = viejos[h.icon] || 'star';
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+function nuevoId() {
+  return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);
 }
 
 function load() {
@@ -267,12 +332,12 @@ function sync(extra = {}) {
 
 // Si este dispositivo no tiene datos, intenta recuperarlos del servidor
 async function restore() {
-  if (state.habits.length) return sync();
+  if (state.habits.length) return;
   try {
     const r = await fetch(`/api/state?uid=${uid}`);
     const j = await r.json();
     if (j.state && j.state.habits && j.state.habits.length) {
-      state = j.state; localStorage.setItem(KEY, JSON.stringify(state)); render();
+      state = j.state; localStorage.setItem(KEY, JSON.stringify(state));
     }
   } catch {}
 }
@@ -342,10 +407,12 @@ function render() {
   }
   $('list').innerHTML = state.habits.map((h) => {
     const r = streak(h.id);
-    const meta = [r > 0 ? `🔥 ${r} ${r === 1 ? 'día' : 'días'} seguidos` : 'Empieza hoy'];
+    const meta = [];
+    if (h.category) meta.push(esc(h.category));
+    meta.push(r > 0 ? `🔥 ${r} ${r === 1 ? 'día' : 'días'}` : 'Empieza hoy');
     if (h.reminder) meta.push(`⏰ ${fmtTime(h.reminder)}`);
-    return `<div class="habit" data-id="${h.id}">
-      <div class="emoji">${h.icon}</div>
+    return `<div class="habit ${isDone(h.id) ? 'done' : ''}" data-id="${h.id}">
+      ${px(isDone(h.id) ? 'check' : h.icon)}
       <div class="info"><div class="name">${esc(h.name)}</div><div class="meta">${meta.join(' · ')}</div></div>
       <button class="check ${isDone(h.id) ? 'on' : ''}" data-check="${h.id}" aria-label="Marcar">✓</button>
     </div>`;
@@ -393,12 +460,12 @@ $('overlay').onclick = closeSheet;
 
 // ---------- Nuevo / editar ----------
 let editing = null; // id del hábito que se edita, o null si es nuevo
-let selIcon = '✅';
+let selIcon = 'star';
 let remOn = false;
 
 function setIcon(ic) {
   selIcon = ic;
-  $('iconGrid').innerHTML = ICONOS.map((i) => `<button class="${i === ic ? 'sel' : ''}" data-icon="${i}">${i}</button>`).join('');
+  $('iconGrid').innerHTML = ICONOS.map((i) => `<button class="${i === ic ? 'sel' : ''}" data-icon="${i}">${px(i)}</button>`).join('');
 }
 function setRem(on) {
   remOn = on;
@@ -411,14 +478,14 @@ function openEdit(habit) {
   $('editTitle').textContent = habit ? 'Editar hábito' : 'Nuevo hábito';
   $('sugBlock').style.display = habit ? 'none' : '';
   $('fName').value = habit ? habit.name : '';
-  setIcon(habit ? habit.icon : '✅');
+  setIcon(habit ? habit.icon : 'star');
   setRem(!!(habit && habit.reminder));
   $('fTime').value = (habit && habit.reminder) || '20:00';
   $('btnSave').textContent = habit ? 'Guardar cambios' : 'Guardar hábito';
   show('sheetEdit');
 }
 
-$('sugs').innerHTML = SUGERENCIAS.map(([n, i]) => `<button class="chip" data-sug="${esc(n)}|${i}">${i} ${esc(n)}</button>`).join('');
+$('sugs').innerHTML = SUGERENCIAS.map(([n, i]) => `<button class="chip" data-sug="${esc(n)}|${i}">${px(i, 'sm')} ${esc(n)}</button>`).join('');
 $('sugs').onclick = (e) => {
   const b = e.target.closest('[data-sug]'); if (!b) return;
   const [n, i] = b.dataset.sug.split('|');
@@ -435,7 +502,7 @@ $('btnSave').onclick = async () => {
   if (editing) {
     Object.assign(state.habits.find((h) => h.id === editing), { name, icon: selIcon, reminder });
   } else {
-    state.habits.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), name, icon: selIcon, reminder, created: ymd() });
+    state.habits.push({ id: nuevoId(), name, icon: selIcon, reminder, created: ymd() });
   }
   save(); render(); renderBanner(); closeSheet();
 
@@ -450,7 +517,7 @@ let detailId = null;
 function openDetail(id) {
   const h = state.habits.find((x) => x.id === id); if (!h) return;
   detailId = id;
-  $('dTitle').textContent = `${h.icon} ${h.name}`;
+  $('dTitle').innerHTML = `${px(h.icon)}${esc(h.name)}`;
   const total = (state.done[id] || []).length;
   $('dStats').innerHTML = [
     [`🔥 ${streak(id)}`, 'Racha actual'],
@@ -528,8 +595,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { re
 
 // ================== Inicio ==================
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+restore().then(() => { migrar(); render(); renderBanner(); sync(); refreshSubscription(); });
 render(); renderBanner();
-restore().then(refreshSubscription);
 </script>
 </body>
 </html>

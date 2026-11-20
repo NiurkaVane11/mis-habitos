@@ -4,7 +4,7 @@ https://mis-habitos-chi.vercel.app
 
 Habit tracker web para iPhone, con recordatorios que llegan como notificación, igual que Bimo.
 
-- Crear hábitos con nombre e ícono, con sugerencias como Listening podcast 🎧
+- Tus hábitos de siempre con íconos pixel art, más Listening podcast 🎧
 - Marcar cada día y ver la racha 🔥
 - Detalle con calendario tipo GitHub y gráfico por semana
 - Recordatorio diario a la hora que elijas. Si ya marcaste el hábito ese día, no te avisa.

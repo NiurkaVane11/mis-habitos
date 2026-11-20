@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
       const n = [...h.id].reduce((a, c) => a + c.charCodeAt(0), 0) + Number(ahora.date.slice(-2));
       try {
         await sendPush(req, data.sub, {
-          title: `${h.icon} ${h.name}`,
+          title: h.name,
           body: MENSAJES[n % MENSAJES.length],
           url: '/',
           tag: h.id,
