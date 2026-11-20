@@ -1,0 +1,17 @@
+{
+  "name": "mis-habitos",
+  "version": "1.0.0",
+  "description": "Habit tracker web con recordatorios push",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@upstash/redis": "^1.41.0",
+    "web-push": "^3.6.7"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

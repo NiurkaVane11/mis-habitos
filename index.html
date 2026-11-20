@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mis Hábitos</title>
+<meta name="theme-color" content="#fff5f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hábitos">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" href="/icons/icon-192.png">
+<style>
+  :root {
+    --bg: #fff5f7;
+    --card: #ffffff;
+    --rose: #e11d74;
+    --rose-soft: #fde2ec;
+    --rose-mid: #f9a8c9;
+    --text: #2b1a22;
+    --muted: #8a6d79;
+    --line: #f3d9e3;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; }
+  body { padding: env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 90px); min-height: 100vh; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+  input { font: inherit; color: inherit; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 6px; }
+  header h1 { font-size: 28px; margin: 0; letter-spacing: -0.5px; }
+  .sub { color: var(--muted); font-size: 14px; padding: 0 20px 12px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--card); display: grid; place-items: center;
+    font-size: 18px; box-shadow: 0 1px 3px rgba(225, 29, 116, .12); }
+
+  .banner { margin: 6px 16px 10px; padding: 14px 16px; border-radius: var(--radius); background: var(--rose-soft);
+    font-size: 14px; line-height: 1.4; display: flex; gap: 12px; align-items: center; }
+  .banner b { font-weight: 600; }
+  .banner .btn { margin-left: auto; white-space: nowrap; }
+
+  .list { padding: 0 16px; display: grid; gap: 10px; }
+  .habit { background: var(--card); border-radius: var(--radius); padding: 14px 14px 14px 16px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 1px 3px rgba(225, 29, 116, .08); }
+  .habit .emoji { font-size: 30px; width: 40px; text-align: center; }
+  .habit .info { flex: 1; min-width: 0; }
+  .habit .name { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .habit .meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .check { width: 42px; height: 42px; border-radius: 50%; border: 2.5px solid var(--rose-mid); display: grid; place-items: center;
+    font-size: 20px; color: transparent; transition: all .15s; flex-shrink: 0; }
+  .check.on { background: var(--rose); border-color: var(--rose); color: #fff; transform: scale(1.05); }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 30px; line-height: 1.6; }
+  .empty .big { font-size: 44px; }
+
+  .fab { position: fixed; right: 20px; bottom: calc(env(safe-area-inset-bottom) + 22px); width: 60px; height: 60px; border-radius: 20px;
+    background: var(--rose); color: #fff; font-size: 30px; box-shadow: 0 6px 18px rgba(225, 29, 116, .35); }
+
+  .btn { background: var(--rose); color: #fff; border-radius: 12px; padding: 10px 16px; font-weight: 600; font-size: 15px; }
+  .btn.ghost { background: var(--rose-soft); color: var(--rose); }
+  .btn.full { width: 100%; padding: 15px; font-size: 16px; border-radius: 14px; }
+  .btn.danger { background: #fff0f0; color: #c0262d; }
+  .btn:disabled { opacity: .5; }
+
+  /* Hojas que suben desde abajo */
+  .overlay { position: fixed; inset: 0; background: rgba(43, 26, 34, .35); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 92vh; overflow-y: auto; background: var(--bg);
+    border-radius: 24px 24px 0 0; padding: 10px 20px calc(env(safe-area-inset-bottom) + 24px);
+    transform: translateY(100%); transition: transform .25s ease; z-index: 11; }
+  .sheet.open { transform: none; }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 12px; }
+  .sheet h2 { margin: 4px 0 16px; font-size: 22px; }
+  .label { font-weight: 600; font-size: 14px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--card); border: 1.5px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 14px; }
+  .icons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .icons button { aspect-ratio: 1; border-radius: 14px; background: var(--card); font-size: 24px; border: 2px solid transparent; }
+  .icons button.sel { border-color: var(--rose); background: var(--rose-soft); }
+  .field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--card); font-size: 16px; outline: none; }
+  .field:focus { border-color: var(--rose-mid); }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--card); border-radius: 14px; padding: 12px 16px; }
+  .row .t { font-weight: 500; }
+  .row .d { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  input[type=time] { border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; background: #fff; font-size: 16px; }
+  .switch { width: 52px; height: 32px; border-radius: 16px; background: var(--line); position: relative; transition: background .2s; flex-shrink: 0; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s; }
+  .switch.on { background: var(--rose); }
+  .switch.on::after { transform: translateX(20px); }
+  .stack { display: grid; gap: 10px; margin-top: 24px; }
+
+  /* Detalle */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--card); border-radius: 14px; padding: 12px 8px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: 700; }
+  .stat .k { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card { background: var(--card); border-radius: 16px; padding: 14px; }
+  .heat { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 3px; }
+  .heat i { display: block; aspect-ratio: 1; border-radius: 3px; background: #f6e8ee; }
+  .heat i.on { background: var(--rose); }
+  .heat i.out { background: transparent; }
+  .heat i.today { outline: 1.5px solid var(--text); outline-offset: -1px; }
+  .legend { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; margin-top: 8px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 100px); transform: translateX(-50%) translateY(20px);
+    background: var(--text); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px; opacity: 0; transition: all .2s;
+    z-index: 20; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mis Hábitos</h1>
+  <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙️</button>
+</header>
+<div class="sub" id="today"></div>
+<div id="banner"></div>
+<div class="list" id="list"></div>
+<button class="fab" id="btnAdd" aria-label="Nuevo hábito">+</button>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Nuevo / editar hábito -->
+<div class="sheet" id="sheetEdit">
+  <div class="grab"></div>
+  <h2 id="editTitle">Nuevo hábito</h2>
+  <div id="sugBlock">
+    <div class="label">Sugerencias</div>
+    <div class="chips" id="sugs"></div>
+  </div>
+  <div class="label">Nombre</div>
+  <input class="field" id="fName" placeholder="Ej: Tomar agua" maxlength="40">
+  <div class="label">Ícono</div>
+  <div class="icons" id="iconGrid"></div>
+  <div class="label">Recordatorio</div>
+  <div class="row">
+    <div>
+      <div class="t">Avisarme todos los días</div>
+      <div class="d" id="remHint">Te llega una notificación a esa hora</div>
+    </div>
+    <button class="switch" id="fRemOn" aria-label="Activar recordatorio"></button>
+  </div>
+  <div class="row" id="remTimeRow" style="margin-top:8px">
+    <div class="t">Hora</div>
+    <input type="time" id="fTime" value="20:00">
+  </div>
+  <div class="stack">
+    <button class="btn full" id="btnSave">Guardar hábito</button>
+  </div>
+</div>
+
+<!-- Detalle -->
+<div class="sheet" id="sheetDetail">
+  <div class="grab"></div>
+  <h2 id="dTitle"></h2>
+  <div class="stats" id="dStats"></div>
+  <div class="label">Últimos meses</div>
+  <div class="card"><div class="heat" id="dHeat"></div>
+    <div class="legend"><span id="dHeatFrom"></span><span>Hoy</span></div></div>
+  <div class="label">Días por semana</div>
+  <div class="card"><svg id="dChart" viewBox="0 0 320 140" width="100%"></svg></div>
+  <div class="stack">
+    <button class="btn ghost full" id="btnEdit">Editar hábito y recordatorio</button>
+    <button class="btn danger full" id="btnDelete">Eliminar hábito</button>
+  </div>
+</div>
+
+<!-- Ajustes -->
+<div class="sheet" id="sheetSettings">
+  <div class="grab"></div>
+  <h2>Notificaciones</h2>
+  <div class="row"><div><div class="t">Estado</div><div class="d" id="notifState"></div></div></div>
+  <div class="stack">
+    <button class="btn full" id="btnEnable">Activar notificaciones</button>
+    <button class="btn ghost full" id="btnTest">Enviar notificación de prueba</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ================== Datos ==================
+const ICONOS = ['✅','💧','🏃','📚','🎧','🧘','🥗','😴','💊','🎯','✍️','🇬🇧','💻','🧹','🙏','🎸','🚶‍♀️','💰'];
+const SUGERENCIAS = [
+  ['Listening podcast', '🎧'],
+  ['Tomar agua', '💧'],
+  ['Leer', '📚'],
+  ['Hacer ejercicio', '🏃'],
+  ['Meditar', '🧘'],
+  ['Practicar inglés', '🇬🇧'],
+];
+
+const KEY = 'habitos.v1';
+let state = load();
+let uid = localStorage.getItem('habitos.uid');
+if (!uid) {
+  uid = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+  localStorage.setItem('habitos.uid', uid);
+}
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || { habits: [], done: {} }; }
+  catch { return { habits: [], done: {} }; }
+}
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+  sync();
+}
+
+// Fecha local como "2026-11-20"
+function ymd(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function isDone(id, date = ymd()) { return (state.done[id] || []).includes(date); }
+function toggle(id) {
+  const t = ymd();
+  const arr = state.done[id] || [];
+  state.done[id] = arr.includes(t) ? arr.filter((x) => x !== t) : [...arr, t];
+  save(); render();
+}
+
+// Racha: días seguidos hasta hoy (si hoy aún no lo marcas, cuenta desde ayer)
+function streak(id) {
+  const set = new Set(state.done[id] || []);
+  let d = new Date();
+  if (!set.has(ymd(d))) d = addDays(d, -1);
+  let n = 0;
+  while (set.has(ymd(d))) { n++; d = addDays(d, -1); }
+  return n;
+}
+function bestStreak(id) {
+  const days = [...new Set(state.done[id] || [])].sort();
+  let best = 0, cur = 0, prev = null;
+  for (const s of days) {
+    const d = new Date(s + 'T12:00:00');
+    cur = prev && ymd(addDays(prev, 1)) === s ? cur + 1 : 1;
+    best = Math.max(best, cur); prev = d;
+  }
+  return best;
+}
+
+function fmtTime(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+// ================== Sincronización con el servidor ==================
+let syncTimer;
+function sync(extra = {}) {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    fetch('/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid, state, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, ...extra }),
+    }).catch(() => {});
+  }, extra.sub !== undefined ? 0 : 600);
+}
+
+// Si este dispositivo no tiene datos, intenta recuperarlos del servidor
+async function restore() {
+  if (state.habits.length) return sync();
+  try {
+    const r = await fetch(`/api/state?uid=${uid}`);
+    const j = await r.json();
+    if (j.state && j.state.habits && j.state.habits.length) {
+      state = j.state; localStorage.setItem(KEY, JSON.stringify(state)); render();
+    }
+  } catch {}
+}
+
+// ================== Notificaciones ==================
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const pushSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function notifStatus() {
+  if (isIOS && !standalone) return 'install';
+  if (!pushSupported) return 'unsupported';
+  return Notification.permission; // granted | denied | default
+}
+
+function b64ToUint8(b64) {
+  const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function enableNotifications() {
+  if (notifStatus() === 'install') { toast('Primero agrégala a tu pantalla de inicio'); return false; }
+  if (!pushSupported) { toast('Este navegador no permite notificaciones'); return false; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { renderBanner(); toast('No diste permiso para notificaciones'); return false; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      const { publicKey } = await (await fetch('/api/vapid')).json();
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToUint8(publicKey) });
+    }
+    sync({ sub: sub.toJSON() });
+    renderBanner(); renderSettings();
+    toast('Notificaciones activadas 🔔');
+    return true;
+  } catch (e) {
+    toast('No se pudo activar. Intenta otra vez');
+    return false;
+  }
+}
+
+// Al abrir, vuelve a mandar la suscripción por si cambió
+async function refreshSubscription() {
+  if (!pushSupported || Notification.permission !== 'granted') return;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) sync({ sub: sub.toJSON() });
+  else enableNotifications();
+}
+
+// ================== Interfaz ==================
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function render() {
+  const fecha = new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' });
+  const hechos = state.habits.filter((h) => isDone(h.id)).length;
+  $('today').textContent = state.habits.length
+    ? `${fecha[0].toUpperCase() + fecha.slice(1)} · ${hechos} de ${state.habits.length} hoy`
+    : fecha[0].toUpperCase() + fecha.slice(1);
+
+  if (!state.habits.length) {
+    $('list').innerHTML = `<div class="empty"><div class="big">🌱</div>Aún no tienes hábitos.<br>Toca <b>+</b> para agregar uno.</div>`;
+    return;
+  }
+  $('list').innerHTML = state.habits.map((h) => {
+    const r = streak(h.id);
+    const meta = [r > 0 ? `🔥 ${r} ${r === 1 ? 'día' : 'días'} seguidos` : 'Empieza hoy'];
+    if (h.reminder) meta.push(`⏰ ${fmtTime(h.reminder)}`);
+    return `<div class="habit" data-id="${h.id}">
+      <div class="emoji">${h.icon}</div>
+      <div class="info"><div class="name">${esc(h.name)}</div><div class="meta">${meta.join(' · ')}</div></div>
+      <button class="check ${isDone(h.id) ? 'on' : ''}" data-check="${h.id}" aria-label="Marcar">✓</button>
+    </div>`;
+  }).join('');
+}
+
+function renderBanner() {
+  const s = notifStatus();
+  const hasRem = state.habits.some((h) => h.reminder);
+  let html = '';
+  if (s === 'install') {
+    html = `<div class="banner">📲<div>Para que te lleguen las notificaciones: toca <b>Compartir</b> y luego <b>Agregar a pantalla de inicio</b>. Después abre la app desde ahí.</div></div>`;
+  } else if (s === 'default' && hasRem) {
+    html = `<div class="banner">🔔<div>Activa las notificaciones para recibir tus recordatorios.</div><button class="btn" data-enable>Activar</button></div>`;
+  } else if (s === 'denied' && hasRem) {
+    html = `<div class="banner">🔕<div>Bloqueaste las notificaciones. Actívalas en <b>Ajustes → Notificaciones → Hábitos</b>.</div></div>`;
+  }
+  $('banner').innerHTML = html;
+}
+
+function renderSettings() {
+  const s = notifStatus();
+  $('notifState').textContent = {
+    install: 'Primero agrega la app a tu pantalla de inicio desde Safari',
+    unsupported: 'Este navegador no permite notificaciones',
+    granted: 'Activadas ✅',
+    denied: 'Bloqueadas. Actívalas en los Ajustes del iPhone',
+    default: 'Todavía no activadas',
+  }[s];
+  $('btnEnable').style.display = s === 'granted' ? 'none' : '';
+  $('btnTest').disabled = s !== 'granted';
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ---------- Hojas ----------
+let openSheet = null;
+function show(id) { closeSheet(); openSheet = $(id); openSheet.classList.add('open'); $('overlay').classList.add('open'); }
+function closeSheet() { if (openSheet) openSheet.classList.remove('open'); $('overlay').classList.remove('open'); openSheet = null; }
+$('overlay').onclick = closeSheet;
+
+// ---------- Nuevo / editar ----------
+let editing = null; // id del hábito que se edita, o null si es nuevo
+let selIcon = '✅';
+let remOn = false;
+
+function setIcon(ic) {
+  selIcon = ic;
+  $('iconGrid').innerHTML = ICONOS.map((i) => `<button class="${i === ic ? 'sel' : ''}" data-icon="${i}">${i}</button>`).join('');
+}
+function setRem(on) {
+  remOn = on;
+  $('fRemOn').classList.toggle('on', on);
+  $('remTimeRow').style.display = on ? '' : 'none';
+}
+
+function openEdit(habit) {
+  editing = habit ? habit.id : null;
+  $('editTitle').textContent = habit ? 'Editar hábito' : 'Nuevo hábito';
+  $('sugBlock').style.display = habit ? 'none' : '';
+  $('fName').value = habit ? habit.name : '';
+  setIcon(habit ? habit.icon : '✅');
+  setRem(!!(habit && habit.reminder));
+  $('fTime').value = (habit && habit.reminder) || '20:00';
+  $('btnSave').textContent = habit ? 'Guardar cambios' : 'Guardar hábito';
+  show('sheetEdit');
+}
+
+$('sugs').innerHTML = SUGERENCIAS.map(([n, i]) => `<button class="chip" data-sug="${esc(n)}|${i}">${i} ${esc(n)}</button>`).join('');
+$('sugs').onclick = (e) => {
+  const b = e.target.closest('[data-sug]'); if (!b) return;
+  const [n, i] = b.dataset.sug.split('|');
+  $('fName').value = n; setIcon(i);
+};
+$('iconGrid').onclick = (e) => { const b = e.target.closest('[data-icon]'); if (b) setIcon(b.dataset.icon); };
+$('fRemOn').onclick = () => setRem(!remOn);
+
+$('btnSave').onclick = async () => {
+  const name = $('fName').value.trim();
+  if (!name) { $('fName').focus(); toast('Escribe un nombre'); return; }
+  const reminder = remOn ? $('fTime').value || '20:00' : null;
+
+  if (editing) {
+    Object.assign(state.habits.find((h) => h.id === editing), { name, icon: selIcon, reminder });
+  } else {
+    state.habits.push({ id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), name, icon: selIcon, reminder, created: ymd() });
+  }
+  save(); render(); renderBanner(); closeSheet();
+
+  // Si puso recordatorio y aún no dio permiso, se lo pedimos aquí mismo
+  if (reminder && notifStatus() === 'default') enableNotifications();
+  else if (reminder && notifStatus() === 'install') toast('Agrégala a tu inicio para recibir avisos');
+  else toast(editing ? 'Cambios guardados' : 'Hábito creado ✨');
+};
+
+// ---------- Detalle ----------
+let detailId = null;
+function openDetail(id) {
+  const h = state.habits.find((x) => x.id === id); if (!h) return;
+  detailId = id;
+  $('dTitle').textContent = `${h.icon} ${h.name}`;
+  const total = (state.done[id] || []).length;
+  $('dStats').innerHTML = [
+    [`🔥 ${streak(id)}`, 'Racha actual'],
+    [bestStreak(id), 'Mejor racha'],
+    [total, 'Total días'],
+  ].map(([v, k]) => `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`).join('');
+
+  // Calendario tipo GitHub: 17 semanas, columnas de lunes a domingo
+  const set = new Set(state.done[id] || []);
+  const hoy = new Date();
+  const lunes = addDays(hoy, -((hoy.getDay() + 6) % 7));
+  const inicio = addDays(lunes, -16 * 7);
+  let cells = '';
+  for (let i = 0; i < 17 * 7; i++) {
+    const d = addDays(inicio, i);
+    const s = ymd(d);
+    const cls = d > hoy ? 'out' : [set.has(s) ? 'on' : '', s === ymd() ? 'today' : ''].join(' ');
+    cells += `<i class="${cls}" title="${s}"></i>`;
+  }
+  $('dHeat').innerHTML = cells;
+  $('dHeatFrom').textContent = inicio.toLocaleDateString('es-EC', { day: 'numeric', month: 'short' });
+
+  // Gráfico: días cumplidos en cada una de las últimas 8 semanas
+  const semanas = [];
+  for (let w = 7; w >= 0; w--) {
+    const ini = addDays(lunes, -w * 7);
+    let n = 0;
+    for (let k = 0; k < 7; k++) if (set.has(ymd(addDays(ini, k)))) n++;
+    semanas.push({ n, label: ini.toLocaleDateString('es-EC', { day: 'numeric', month: 'numeric' }) });
+  }
+  const W = 320, H = 140, bw = 26, gap = (W - 8 * bw) / 9;
+  $('dChart').innerHTML = semanas.map((s, i) => {
+    const x = gap + i * (bw + gap);
+    const bh = Math.max(3, (s.n / 7) * 96);
+    return `<rect x="${x}" y="${110 - bh}" width="${bw}" height="${bh}" rx="6" fill="${i === 7 ? '#e11d74' : '#f9a8c9'}"/>
+      <text x="${x + bw / 2}" y="${104 - bh}" text-anchor="middle" font-size="11" fill="#2b1a22">${s.n}</text>
+      <text x="${x + bw / 2}" y="128" text-anchor="middle" font-size="9.5" fill="#8a6d79">${s.label}</text>`;
+  }).join('');
+
+  show('sheetDetail');
+}
+$('btnEdit').onclick = () => openEdit(state.habits.find((h) => h.id === detailId));
+$('btnDelete').onclick = () => {
+  const h = state.habits.find((x) => x.id === detailId);
+  if (!h || !confirm(`¿Eliminar "${h.name}" y todo su progreso?`)) return;
+  state.habits = state.habits.filter((x) => x.id !== detailId);
+  delete state.done[detailId];
+  save(); render(); renderBanner(); closeSheet();
+};
+
+// ---------- Ajustes ----------
+$('btnSettings').onclick = () => { renderSettings(); show('sheetSettings'); };
+$('btnEnable').onclick = enableNotifications;
+$('btnTest').onclick = async () => {
+  $('btnTest').disabled = true;
+  try {
+    const r = await fetch('/api/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid }) });
+    const j = await r.json();
+    toast(r.ok ? 'Enviada. Debería llegarte en unos segundos' : j.error);
+  } catch { toast('Sin conexión'); }
+  $('btnTest').disabled = false;
+};
+
+// ---------- Lista ----------
+$('list').onclick = (e) => {
+  const c = e.target.closest('[data-check]');
+  if (c) { toggle(c.dataset.check); if (navigator.vibrate) navigator.vibrate(10); return; }
+  const h = e.target.closest('.habit'); if (h) openDetail(h.dataset.id);
+};
+$('banner').onclick = (e) => { if (e.target.closest('[data-enable]')) enableNotifications(); };
+$('btnAdd').onclick = () => openEdit(null);
+
+// Al volver a la app (por ejemplo tras tocar una notificación), actualiza el día
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); renderBanner(); } });
+
+// ================== Inicio ==================
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+render(); renderBanner();
+restore().then(refreshSubscription);
+</script>
+</body>
+</html>
