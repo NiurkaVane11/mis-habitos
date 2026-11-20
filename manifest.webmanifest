@@ -1,16 +1,29 @@
 {
-  "name": "Mis Hábitos",
-  "short_name": "Hábitos",
-  "description": "Marca tus hábitos cada día y recibe recordatorios",
+  "name": "My Habit Tracker ♡",
+  "short_name": "Habits ♡",
+  "description": "Mis hábitos del día con recordatorio diario",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fff5f7",
-  "theme_color": "#fff5f7",
+  "background_color": "#fff7fc",
+  "theme_color": "#fff7fc",
   "lang": "es",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

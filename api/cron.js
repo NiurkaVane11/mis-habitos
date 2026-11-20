@@ -26,6 +26,36 @@ module.exports = async (req, res) => {
     const ahora = localNow(data.tz);
     const done = data.state.done || {};
 
+    // Recordatorio diario del Habit Tracker: un aviso con los hábitos que faltan
+    const daily = data.state.daily;
+    if (daily && daily.time) {
+      const rem = aMinutos(daily.time);
+      const diff = rem === null ? -1 : ahora.minutes - rem;
+      if (diff >= 0 && diff <= VENTANA) {
+        const hoy = (daily.days || {})[ahora.date] || {};
+        const faltan = (daily.names || []).filter((n) => hoy[n] !== true);
+        if (faltan.length) {
+          const marcado = await redis.set(`s:${uid}:daily:${ahora.date}`, 1, { nx: true, ex: 60 * 60 * 48 });
+          if (marcado) {
+            const lista = faltan.length <= 3 ? faltan.join(', ') : `${faltan.slice(0, 3).join(', ')} y ${faltan.length - 3} más`;
+            try {
+              await sendPush(req, data.sub, {
+                title: 'My Habit Tracker ♡',
+                body: `Te ${faltan.length === 1 ? 'falta' : 'faltan'} ${faltan.length}: ${lista}`,
+                url: '/',
+                tag: 'daily',
+              });
+              enviados++;
+            } catch (e) {
+              if (e.statusCode === 404 || e.statusCode === 410) {
+                await redis.set(`u:${uid}`, { ...data, sub: null });
+              }
+            }
+          }
+        }
+      }
+    }
+
     for (const h of data.state.habits || []) {
       const rem = aMinutos(h.reminder);
       if (rem === null) continue;
