@@ -1,5 +1,7 @@
 # Mis Hábitos 🎧💧📚
 
+https://mis-habitos-chi.vercel.app
+
 Habit tracker web para iPhone, con recordatorios que llegan como notificación, igual que Bimo.
 
 - Crear hábitos con nombre e ícono, con sugerencias como Listening podcast 🎧
@@ -12,7 +14,7 @@ Habit tracker web para iPhone, con recordatorios que llegan como notificación, 
 1. Sube esta carpeta a un repo nuevo de GitHub.
 2. En Vercel: Add New → Project → importa el repo → Deploy.
 3. En el proyecto de Vercel: Storage → Upstash for Redis → Create → Connect. Luego Deployments → Redeploy.
-4. En cron-job.org crea un cronjob con la URL `https://TU-APP.vercel.app/api/cron` cada 1 minuto.
+4. Los avisos los dispara GitHub Actions cada 5 minutos (`.github/workflows/recordatorios.yml`), así que pueden llegar hasta unos minutos después de la hora.
 5. En el iPhone abre la URL en Safari → Compartir → Agregar a pantalla de inicio. Ábrela desde el ícono, crea un hábito con recordatorio y acepta las notificaciones.
 
 En ⚙️ hay un botón para mandar una notificación de prueba.
